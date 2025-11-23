@@ -53,7 +53,8 @@ export default function Feedbacks() {
 
   useEffect(() => {
     loadFeedbacks();
-  }, [loadFeedbacks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -104,14 +105,78 @@ export default function Feedbacks() {
                     <td>{f.title}</td>
                     <td>{f.description?.substring(0, 50)}...</td>
                     <td>{f.category || '-'}</td>
-                    {/* ✅ SỬ DỤNG StatusBadge */}
                     <td>
                       <StatusBadge status={f.status} size="sm" />
                     </td>
                     <td>{f.user?.fullName || f.user?.username || '-'}</td>
                     <td>{new Date(f.createdAt).toLocaleDateString('vi-VN')}</td>
+
+                    {/* ✅ THÊM: Action buttons */}
                     <td>
-                      {/* ...existing buttons... */}
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        {f.status === 'Pending' && (
+                          <>
+                            <button
+                              className="btn"
+                              onClick={() => openReviewModal(f, 'Processing')}
+                              style={{
+                                background: '#3b82f6',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              🔄 Tiếp nhận
+                            </button>
+                            <button
+                              className="btn"
+                              onClick={() => openReviewModal(f, 'Rejected')}
+                              style={{
+                                background: '#ef4444',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              ❌ Từ chối
+                            </button>
+                          </>
+                        )}
+
+                        {f.status === 'Processing' && (
+                          <button
+                            className="btn"
+                            onClick={() => openReviewModal(f, 'Resolved')}
+                            style={{
+                              background: '#10b981',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            ✅ Giải quyết
+                          </button>
+                        )}
+
+                        {(f.status === 'Resolved' || f.status === 'Rejected') && (
+                          <button
+                            className="btn"
+                            onClick={() => openReviewModal(f, f.status)}
+                            style={{
+                              background: '#6b7280',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            👁️ Chi tiết
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -47,6 +47,13 @@ export default function StatusBadge({ status, size = 'md' }) {
             text: '#991b1b',
             border: '#ef4444'
         },
+        'Dangerous': {
+            icon: '🟣',
+            label: 'Nguy hiểm',
+            bg: '#fae8ff',
+            text: '#701a75',
+            border: '#a855f7'
+        },
         'Unknown': {
             icon: '⚪',
             label: 'Chưa đánh giá',

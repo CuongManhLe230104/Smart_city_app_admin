@@ -24,7 +24,8 @@ export default function Users() {
 
   useEffect(() => {
     loadUsers();
-  }, [loadUsers]); // ✅ Dependency [loadUsers]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredUsers = users.filter(u =>
     u.email?.toLowerCase().includes(search.toLowerCase()) ||

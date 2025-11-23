@@ -20,7 +20,10 @@ export default function Events() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadBanners(); }, [loadBanners]);
+  useEffect(() => {
+    loadBanners();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bạn có chắc muốn xóa Banner này?')) return;

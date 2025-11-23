@@ -11,6 +11,25 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+const transformImageUrl = (url) => {
+  if (!url) return null;
+  // Replace Android emulator localhost với browser localhost
+  return url.replace('http://10.0.2.2:5000', 'http://localhost:5000');
+};
+
+// ✅ Transform response data
+const transformFloodReportData = (data) => {
+  if (Array.isArray(data)) {
+    return data.map(report => ({
+      ...report,
+      imageUrl: transformImageUrl(report.imageUrl)
+    }));
+  }
+  return {
+    ...data,
+    imageUrl: transformImageUrl(data.imageUrl)
+  };
+};
 
 // ✅ Interceptor để handle error globally (tùy chọn)
 api.interceptors.response.use(
@@ -26,6 +45,10 @@ api.interceptors.response.use(
 export async function getFloodReports(status = '') {
   const params = status ? { status } : {};
   const res = await api.get('/floodreports/admin/all', { params });
+
+  if (res.data?.data) {
+    res.data.data = transformFloodReportData(res.data.data);
+  }
   return res.data;
 }
 
@@ -82,5 +105,11 @@ export async function deleteEvent(id) {
 // ========== USERS ==========
 
 export const getUsers = () => api.get('/auth/users');
+
+// ========== AI FLOOD IMAGE ANALYSIS ==========
+
+export const analyzeFloodImageAI = (floodReportId) => {
+  return api.post(`/aifloodanalysis/analyze/${floodReportId}`);
+};
 
 export default api;

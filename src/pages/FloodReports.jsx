@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFloodReports, reviewFloodReport } from '../services/api.js';
+import { getFloodReports, reviewFloodReport, analyzeFloodImageAI } from '../services/api.js';
 import Panel from '../components/Panel.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 
@@ -8,7 +8,10 @@ export default function FloodReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
-
+  //AI analysis states  
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  //modal states
   const [showModal, setShowModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [reviewStatus, setReviewStatus] = useState('');
@@ -29,10 +32,22 @@ export default function FloodReports() {
   }, [status]);
 
   const openReviewModal = (report, newStatus) => {
-    setSelectedReport(report);
+    // ✅ THÊM: Debug log
+    console.log('📋 Opening modal for report:', report);
+    console.log('🖼️ Original imageUrl:', report.imageUrl);
+
+    // ✅ THÊM: Transform URL nếu chưa được transform
+    const transformedReport = {
+      ...report,
+      imageUrl: report.imageUrl?.replace('http://10.0.2.2:5000', 'http://localhost:5000')
+    };
+
+    console.log('🔄 Transformed imageUrl:', transformedReport.imageUrl);
+
+    setSelectedReport(transformedReport);
     setReviewStatus(newStatus);
-    setWaterLevel(report.waterLevel || ''); // ✅ Pre-fill waterLevel nếu có
-    setAdminNote(report.adminNote || ''); // ✅ Pre-fill adminNote nếu có
+    setWaterLevel(report.waterLevel || '');
+    setAdminNote(report.adminNote || '');
     setShowModal(true);
   };
 
@@ -56,6 +71,40 @@ export default function FloodReports() {
     } catch (err) {
       alert(`Lỗi: ${err.message}`);
       console.error(err);
+    }
+  };
+
+  const handleAIAnalyze = async () => {
+    if (!selectedReport?.imageUrl) {
+      alert('Báo cáo không có hình ảnh để phân tích!');
+      return;
+    }
+
+    setAiAnalyzing(true);
+    setAiResult(null);
+
+    try {
+      const res = await analyzeFloodImageAI(selectedReport.id);
+      const analysis = res.data.data.aiAnalysis;
+
+      setAiResult(analysis);
+
+      // ✅ Auto-fill mức độ ngập và ghi chú
+      setWaterLevel(analysis.waterLevel);
+      setAdminNote(
+        `🤖 AI Phân tích:\n\n` +
+        `📊 Độ sâu ước tính: ${analysis.estimatedDepth}\n` +
+        `🎯 Độ tin cậy: ${analysis.confidence}\n\n` +
+        `📝 Chi tiết:\n${analysis.analysis}\n\n` +
+        `💡 Khuyến nghị:\n${analysis.recommendations}`
+      );
+
+      alert('✅ AI đã phân tích xong! Vui lòng kiểm tra và xác nhận.');
+    } catch (err) {
+      alert(`❌ Lỗi phân tích AI: ${err.response?.data?.message || err.message}`);
+      console.error(err);
+    } finally {
+      setAiAnalyzing(false);
     }
   };
 
@@ -96,7 +145,7 @@ export default function FloodReports() {
                 <tr>
                   <th>ID</th>
                   <th>Tiêu đề</th>
-                  <th>Địa chỉ</th> {/* ✅ THÊM: Cột địa chỉ */}
+                  <th>Địa chỉ</th>
                   <th>Mức độ ngập</th>
                   <th>Trạng thái</th>
                   <th>Người báo</th>
@@ -112,7 +161,6 @@ export default function FloodReports() {
                     <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.address || '-'}
                     </td>
-                    {/* ✅ SỬ DỤNG StatusBadge */}
                     <td>
                       <StatusBadge status={r.waterLevel || 'Unknown'} size="sm" />
                     </td>
@@ -121,8 +169,54 @@ export default function FloodReports() {
                     </td>
                     <td>{r.user?.fullName || r.user?.username || '-'}</td>
                     <td>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</td>
+
+                    {/* ✅ THÊM: Action buttons */}
                     <td>
-                      {/* ...existing buttons... */}
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        {r.status === 'Pending' && (
+                          <>
+                            <button
+                              className="btn"
+                              onClick={() => openReviewModal(r, 'Approved')}
+                              style={{
+                                background: '#10b981',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              ✅ Duyệt
+                            </button>
+                            <button
+                              className="btn"
+                              onClick={() => openReviewModal(r, 'Rejected')}
+                              style={{
+                                background: '#ef4444',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              ❌ Từ chối
+                            </button>
+                          </>
+                        )}
+
+                        {(r.status === 'Approved' || r.status === 'Rejected') && (
+                          <button
+                            className="btn"
+                            onClick={() => openReviewModal(r, r.status)}
+                            style={{
+                              background: '#6b7280',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            👁️ Chi tiết
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -152,7 +246,7 @@ export default function FloodReports() {
             borderRadius: '12px',
             minWidth: '500px',
             maxWidth: '700px',
-            maxHeight: '80vh',
+            maxHeight: '90vh',
             overflowY: 'auto',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
           }}>
@@ -162,6 +256,128 @@ export default function FloodReports() {
               {reviewStatus === 'Approved' && selectedReport?.status === 'Pending' && '✅ Duyệt báo cáo'}
               {reviewStatus === 'Rejected' && selectedReport?.status === 'Pending' && '❌ Từ chối báo cáo'}
             </h3>
+            {selectedReport?.status === 'Pending' && selectedReport?.imageUrl && (
+              <div style={{
+                marginBottom: '20px',
+                padding: '16px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '12px',
+                border: '2px solid #5a67d8'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '32px' }}>🤖</span>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                      AI Phân tích Hình ảnh
+                    </h4>
+                    <p style={{ margin: '4px 0 0 0', color: '#e0e7ff', fontSize: '13px' }}>
+                      Sử dụng GPT-4 Vision để phân tích mức độ ngập tự động
+                    </p>
+                  </div>
+                  <button
+                    className="btn"
+                    onClick={handleAIAnalyze}
+                    disabled={aiAnalyzing}
+                    style={{
+                      background: aiAnalyzing ? '#9ca3af' : 'white',
+                      color: '#667eea',
+                      padding: '10px 20px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: aiAnalyzing ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {aiAnalyzing ? '⏳ Đang phân tích...' : '🚀 Phân tích ngay'}
+                  </button>
+                </div>
+
+                {/* ✅ THÊM: Hiển thị kết quả AI */}
+                {aiResult && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '16px',
+                    background: 'white',
+                    borderRadius: '8px',
+                    border: '2px solid #a5b4fc'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '20px' }}>✨</span>
+                      <strong style={{ color: '#4c51bf', fontSize: '15px' }}>Kết quả phân tích:</strong>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#374151', fontSize: '13px' }}>Mức độ:</strong>
+                        <StatusBadge status={aiResult.waterLevel} size="sm" />
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#374151', fontSize: '13px' }}>Độ sâu:</strong>
+                        <span style={{
+                          padding: '4px 10px',
+                          background: '#fef3c7',
+                          color: '#92400e',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}>
+                          📏 {aiResult.estimatedDepth}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#374151', fontSize: '13px' }}>Độ tin cậy:</strong>
+                        <span style={{
+                          padding: '4px 10px',
+                          background: aiResult.confidence === 'high' ? '#d1fae5' :
+                            aiResult.confidence === 'medium' ? '#fef3c7' : '#fee2e2',
+                          color: aiResult.confidence === 'high' ? '#065f46' :
+                            aiResult.confidence === 'medium' ? '#92400e' : '#991b1b',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}>
+                          {aiResult.confidence === 'high' && '🎯 Cao'}
+                          {aiResult.confidence === 'medium' && '⚠️ Trung bình'}
+                          {aiResult.confidence === 'low' && '❓ Thấp'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '12px',
+                      background: '#f9fafb',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      color: '#374151'
+                    }}>
+                      <strong>📝 Chi tiết:</strong>
+                      <p style={{ margin: '8px 0 0 0', whiteSpace: 'pre-wrap' }}>
+                        {aiResult.analysis}
+                      </p>
+                    </div>
+
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '12px',
+                      background: '#eff6ff',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      color: '#1e40af',
+                      border: '1px solid #bfdbfe'
+                    }}>
+                      <strong>💡 Khuyến nghị:</strong>
+                      <p style={{ margin: '8px 0 0 0', whiteSpace: 'pre-wrap' }}>
+                        {aiResult.recommendations}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ✅ THÊM: Thông tin chi tiết báo cáo */}
             <div style={{
@@ -238,18 +454,141 @@ export default function FloodReports() {
               {selectedReport?.imageUrl && (
                 <div style={{ marginBottom: '12px' }}>
                   <strong style={{ color: '#374151' }}>📷 Ảnh hiện trường:</strong>
-                  <img
-                    src={selectedReport.imageUrl}
-                    alt="Ảnh ngập lụt"
-                    style={{
-                      width: '100%',
-                      marginTop: '8px',
-                      borderRadius: '8px',
-                      border: '1px solid #e5e7eb',
-                      maxHeight: '300px',
-                      objectFit: 'cover'
-                    }}
-                  />
+                  <div style={{
+                    position: 'relative',
+                    marginTop: '8px',
+                    background: '#f9fafb',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    minHeight: '200px'
+                  }}>
+                    {/* ✅ Loading placeholder - Hiện trước */}
+                    <div
+                      id={`image-loading-${selectedReport.id}`}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#f9fafb',
+                        color: '#6b7280',
+                        fontSize: '14px',
+                        zIndex: 10
+                      }}
+                    >
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏳</div>
+                        <div>Đang tải ảnh...</div>
+                      </div>
+                    </div>
+
+                    {/* ✅ Image */}
+                    <img
+                      src={selectedReport.imageUrl}
+                      alt="Ảnh ngập lụt"
+                      style={{
+                        width: '100%',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        maxHeight: '400px',
+                        objectFit: 'contain',
+                        display: 'block',
+                        position: 'relative',
+                        zIndex: 20
+                      }}
+                      onLoad={() => {
+                        console.log('✅ Ảnh load thành công:', selectedReport.imageUrl);
+
+                        // ✅ XÓA loading overlay khi ảnh load xong
+                        const loadingDiv = document.getElementById(`image-loading-${selectedReport.id}`);
+                        if (loadingDiv) {
+                          loadingDiv.remove();
+                        }
+                      }}
+                      onError={(e) => {
+                        console.error('❌ Lỗi load ảnh:', selectedReport.imageUrl);
+
+                        // ✅ XÓA loading overlay
+                        const loadingDiv = document.getElementById(`image-loading-${selectedReport.id}`);
+                        if (loadingDiv) {
+                          loadingDiv.remove();
+                        }
+
+                        // Hide broken image
+                        e.target.style.display = 'none';
+
+                        // Create error message
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.cssText = `
+                          padding: 40px 20px;
+                          text-align: center;
+                          background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+                          border: 2px dashed #ef4444;
+                          border-radius: 8px;
+                          color: #991b1b;
+                        `;
+
+                        errorDiv.innerHTML = `
+                          <div style="font-size: 64px; margin-bottom: 16px;">🖼️</div>
+                          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                            ❌ Không thể tải ảnh
+                          </div>
+                          <div style="font-size: 12px; color: #7f1d1d; margin-bottom: 16px;">
+                            Backend chưa chạy hoặc ảnh không tồn tại
+                          </div>
+                          <div style="
+                            padding: 12px;
+                            background: white;
+                            border-radius: 6px;
+                            font-family: monospace;
+                            font-size: 11px;
+                            color: #6b7280;
+                            word-break: break-all;
+                            margin-bottom: 16px;
+                          ">
+                            ${selectedReport.imageUrl}
+                          </div>
+                          <a 
+                            href="${selectedReport.imageUrl}" 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="
+                              display: inline-block;
+                              padding: 8px 16px;
+                              background: #ef4444;
+                              color: white;
+                              border-radius: 6px;
+                              text-decoration: none;
+                              font-size: 13px;
+                              font-weight: 600;
+                            "
+                          >
+                            🔗 Thử mở ảnh trong tab mới
+                          </a>
+                        `;
+
+                        e.target.parentElement.appendChild(errorDiv);
+                      }}
+                    />
+                  </div>
+
+                  {/* ✅ Image URL info */}
+                  <div style={{
+                    marginTop: '8px',
+                    padding: '8px 12px',
+                    background: '#f3f4f6',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    color: '#6b7280',
+                    fontFamily: 'monospace',
+                    wordBreak: 'break-all'
+                  }}>
+                    🔗 {selectedReport.imageUrl}
+                  </div>
                 </div>
               )}
               <div>
@@ -283,6 +622,7 @@ export default function FloodReports() {
                         <option value="Low">🟢 Thấp (Low) - Dưới 20cm</option>
                         <option value="Medium">🟡 Trung bình (Medium) - 20-40cm</option>
                         <option value="High">🔴 Cao (High) - Trên 40cm</option>
+                        <option value="Dangerous">🟣 Nguy hiểm (Dangerous) - Trên 60cm</option>
                       </select>
                     </label>
                   </div>
@@ -322,34 +662,17 @@ export default function FloodReports() {
               }}>
                 <div style={{ marginBottom: '12px' }}>
                   <strong>Trạng thái:</strong>{' '}
-                  <span style={{
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    background: selectedReport.status === 'Approved' ? '#10b981' : '#ef4444',
-                    color: 'white',
-                    fontSize: '12px',
-                    fontWeight: '500'
-                  }}>
-                    {selectedReport.status === 'Approved' ? '✅ Đã duyệt' : '❌ Đã từ chối'}
-                  </span>
+                  <StatusBadge status={selectedReport.status} size="sm" />
                 </div>
+
+                {/* ✅ SỬA: Dùng StatusBadge thay vì hardcode */}
                 {selectedReport.waterLevel && (
                   <div style={{ marginBottom: '12px' }}>
                     <strong>Mức độ ngập:</strong>{' '}
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      background: selectedReport.waterLevel === 'High' ? '#ef4444' :
-                        selectedReport.waterLevel === 'Medium' ? '#f59e0b' : '#10b981',
-                      color: 'white',
-                      fontSize: '12px'
-                    }}>
-                      {selectedReport.waterLevel === 'High' && '🔴 Cao'}
-                      {selectedReport.waterLevel === 'Medium' && '🟡 Trung bình'}
-                      {selectedReport.waterLevel === 'Low' && '🟢 Thấp'}
-                    </span>
+                    <StatusBadge status={selectedReport.waterLevel} size="md" />
                   </div>
                 )}
+
                 {selectedReport.adminNote && (
                   <div>
                     <strong>Ghi chú admin:</strong>
@@ -358,7 +681,8 @@ export default function FloodReports() {
                       padding: '12px',
                       background: 'white',
                       borderRadius: '6px',
-                      whiteSpace: 'pre-wrap'
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.6'
                     }}>
                       {selectedReport.adminNote}
                     </p>

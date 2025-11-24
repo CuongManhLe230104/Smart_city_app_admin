@@ -516,7 +516,7 @@ function StatCard({ icon, label, value, subValue, color, bgColor, onClick }) {
   );
 }
 
-function ActivityItem({ type, icon, text, subtext, time, status, color, id, onNavigate }) {
+function ActivityItem({ type, icon, text, subtext, time, status, color, onNavigate }) {
   return (
     <div
       onClick={() => {

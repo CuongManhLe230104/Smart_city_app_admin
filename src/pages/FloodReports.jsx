@@ -271,7 +271,7 @@ export default function FloodReports() {
                       AI Phân tích Hình ảnh
                     </h4>
                     <p style={{ margin: '4px 0 0 0', color: '#e0e7ff', fontSize: '13px' }}>
-                      Sử dụng GPT-4 Vision để phân tích mức độ ngập tự động
+                      Sử dụng Deepseek AI chat để phân tích mức độ ngập tự động
                     </p>
                   </div>
                   <button

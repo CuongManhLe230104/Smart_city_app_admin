@@ -152,7 +152,30 @@ export default function StatusBadge({ status, size = 'md' }) {
             bg: '#e0e7ff',
             text: '#3730a3',
             border: '#6366f1'
-        }
+        },
+
+        // ✅ BOOKING STATUS - SỬA LẠI THEO YÊU CẦU
+        'Confirmed': {
+            icon: '✅',
+            label: 'Đã xác nhận',
+            bg: '#d1fae5',
+            text: '#065f46',
+            border: '#10b981'
+        },
+        'Pending': { // ✅ Trùng với Flood Reports nhưng dùng chung được
+            icon: '⏳',
+            label: 'Chưa xác nhận',
+            bg: '#fef3c7',
+            text: '#92400e',
+            border: '#f59e0b'
+        },
+        'Cancelled': { // ✅ Trùng với Ticket Status
+            icon: '❌',
+            label: 'Đã hủy',
+            bg: '#fee2e2',
+            text: '#991b1b',
+            border: '#ef4444'
+        },
     };
 
     const config = statusConfig[status] || {

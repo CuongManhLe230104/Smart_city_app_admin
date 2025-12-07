@@ -7,6 +7,8 @@ export default function Sidebar({ currentView, onChangeView }) {
     { key: "events", label: "📅 Quản lý Sự kiện" },
     { key: "feedbacks", label: "💬 Quản lý Feedback" },
     { key: "floodreports", label: "🌊 Quản lý Flood Report" },
+    { key: "traveltours", label: "🗺️ Quản lý Tour Du Lịch" },
+    { key: "bookings", label: "🎫 Quản lý Đơn đặt Tour" },
     { key: "settings", label: "⚙️ Cài đặt" }
   ];
 

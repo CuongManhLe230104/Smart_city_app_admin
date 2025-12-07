@@ -1,23 +1,25 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import Topbar from "./components/Topbar";
+// import Topbar from "./components/Topbar";
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Events from './pages/Events';
 import Feedbacks from './pages/Feedbacks';
 import FloodReports from './pages/FloodReports';
+import TravelTours from './pages/TravelTours';
+import Bookings from './pages/Bookings';
 
 export default function App() {
   const [currentView, setCurrentView] = useState("dashboard");
 
-  const handleSearch = (query) => {
-    console.log('Search:', query);
-  };
+  // const handleSearch = (query) => {
+  //   console.log('Search:', query);
+  // };
 
-  const handleRefresh = () => {
-    console.log('Refresh triggered');
-    setCurrentView(prev => prev);
-  };
+  // const handleRefresh = () => {
+  //   console.log('Refresh triggered');
+  //   setCurrentView(prev => prev);
+  // };
 
   // ✅ Navigation handler
   const handleNavigate = (view) => {
@@ -36,6 +38,10 @@ export default function App() {
         return <Feedbacks />;
       case "floodreports":
         return <FloodReports />;
+      case "traveltours":
+        return <TravelTours />;
+      case "bookings":
+        return <Bookings />;
       default:
         return (
           <div style={{
@@ -51,16 +57,16 @@ export default function App() {
     }
   };
 
-  const getPageTitle = () => {
-    const titles = {
-      dashboard: "📊 Tổng quan",
-      users: "👥 Quản lý Users",
-      events: "📢 Quản lý Sự kiện",
-      feedbacks: "💬 Quản lý Feedback",
-      floodreports: "🌊 Quản lý Báo cáo Ngập"
-    };
-    return titles[currentView] || currentView;
-  };
+  // const getPageTitle = () => {
+  //   const titles = {
+  //     dashboard: "📊 Tổng quan",
+  //     users: "👥 Quản lý Users",
+  //     events: "📢 Quản lý Sự kiện",
+  //     feedbacks: "💬 Quản lý Feedback",
+  //     floodreports: "🌊 Quản lý Báo cáo Ngập"
+  //   };
+  //   return titles[currentView] || currentView;
+  // };
 
   return (
     <div className="app">
@@ -70,11 +76,11 @@ export default function App() {
       />
 
       <main className="main">
-        <Topbar
+        {/* <Topbar
           pageTitle={getPageTitle()}
           onSearch={handleSearch}
           onRefresh={handleRefresh}
-        />
+        /> */}
 
         <div style={{
           padding: '24px',

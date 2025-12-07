@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFeedbacks, reviewFeedback } from '../services/api.js';
+import {
+  getFeedbacks,
+  reviewFeedback,
+  deleteFeedback,
+  updateFeedback
+} from '../services/api.js';
 import Panel from '../components/Panel.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 
@@ -13,6 +18,9 @@ export default function Feedbacks() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [reviewStatus, setReviewStatus] = useState('');
   const [adminResponse, setAdminResponse] = useState('');
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
 
   const loadFeedbacks = useCallback(async () => {
     setLoading(true);
@@ -51,6 +59,48 @@ export default function Feedbacks() {
     }
   };
 
+  // ✅ THÊM: Handle Delete
+  const handleDeleteFeedback = async (id) => {
+    if (!window.confirm('⚠️ Bạn có chắc muốn xóa phản ánh này?\n\nHành động này không thể hoàn tác!')) {
+      return;
+    }
+
+    try {
+      await deleteFeedback(id);
+      alert('✅ Đã xóa phản ánh thành công!');
+      setShowModal(false);
+      loadFeedbacks();
+    } catch (err) {
+      alert(`❌ Lỗi xóa phản ánh: ${err.response?.data?.message || err.message}`);
+      console.error(err);
+    }
+  };
+
+  // ✅ THÊM: Handle Edit
+  const handleEditFeedback = () => {
+    setIsEditing(true);
+    setEditFormData({
+      title: selectedFeedback.title || '',
+      description: selectedFeedback.description || '',
+      category: selectedFeedback.category || '',
+      adminResponse: selectedFeedback.adminResponse || ''
+    });
+  };
+
+  // ✅ THÊM: Handle Submit Edit
+  const handleSubmitEdit = async () => {
+    try {
+      await updateFeedback(selectedFeedback.id, editFormData);
+      alert('✅ Cập nhật phản ánh thành công!');
+      setIsEditing(false);
+      setShowModal(false);
+      loadFeedbacks();
+    } catch (err) {
+      alert(`❌ Lỗi cập nhật: ${err.response?.data?.message || err.message}`);
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     loadFeedbacks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,7 +110,7 @@ export default function Feedbacks() {
     <>
       <Panel>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h2>Danh sách Feedback</h2>
+          <h2>💬 Danh sách Feedback</h2>
           <button className="btn" onClick={loadFeedbacks}>Làm mới</button>
         </div>
 
@@ -210,145 +260,342 @@ export default function Feedbacks() {
             overflowY: 'auto',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
           }}>
-            {/* Header */}
             <h3 style={{ marginBottom: '16px', color: '#111827' }}>
-              {reviewStatus === 'Processing' && '✅ Xác nhận tiếp nhận phản ánh'}
-              {reviewStatus === 'Resolved' && '✅ Giải quyết phản ánh'}
-              {reviewStatus === 'Rejected' && '❌ Từ chối phản ánh'}
+              {isEditing ? '✏️ Chỉnh sửa phản ánh' :
+                reviewStatus === 'Processing' ? '✅ Xác nhận tiếp nhận phản ánh' :
+                  reviewStatus === 'Resolved' ? '✅ Giải quyết phản ánh' :
+                    '❌ Từ chối phản ánh'}
             </h3>
 
-            {/* Thông tin feedback */}
-            <div style={{
-              marginTop: '16px',
-              padding: '16px',
-              background: '#f3f4f6',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <div style={{ marginBottom: '12px' }}>
-                <strong style={{ color: '#374151' }}>ID:</strong>{' '}
-                <span style={{ color: '#6b7280' }}>{selectedFeedback?.id}</span>
-              </div>
-              <div style={{ marginBottom: '12px' }}>
-                <strong style={{ color: '#374151' }}>Tiêu đề:</strong>{' '}
-                <span style={{ color: '#111827' }}>{selectedFeedback?.title}</span>
-              </div>
-              <div style={{ marginBottom: '12px' }}>
-                <strong style={{ color: '#374151' }}>Danh mục:</strong>{' '}
-                <span style={{
-                  padding: '2px 8px',
-                  background: '#dbeafe',
-                  color: '#1e40af',
-                  borderRadius: '4px',
-                  fontSize: '12px'
-                }}>
-                  {selectedFeedback?.category}
-                </span>
-              </div>
-              <div style={{ marginBottom: '12px' }}>
-                <strong style={{ color: '#374151' }}>Nội dung:</strong>
-                <p style={{
-                  whiteSpace: 'pre-wrap',
-                  marginTop: '8px',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '6px',
-                  color: '#111827',
-                  lineHeight: '1.6'
-                }}>
-                  {selectedFeedback?.description}
-                </p>
-              </div>
-              <div>
-                <strong style={{ color: '#374151' }}>Người gửi:</strong>{' '}
-                <span style={{ color: '#6b7280' }}>
-                  {selectedFeedback?.user?.fullName || selectedFeedback?.user?.email}
-                </span>
-              </div>
-            </div>
+            {/* ✅ THÊM: Edit Form */}
+            {isEditing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px' }}>
+                    Tiêu đề:
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
 
-            {/* Phản hồi admin */}
-            <div style={{ marginTop: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>
-                <strong style={{ color: '#374151' }}>
-                  Phản hồi của admin: <span style={{ color: '#ef4444' }}>*</span>
-                </strong>
-              </label>
-              <textarea
-                value={adminResponse}
-                onChange={(e) => setAdminResponse(e.target.value)}
-                placeholder={
-                  reviewStatus === 'Processing'
-                    ? 'VD: Chúng tôi đã ghi nhận phản ánh và sẽ xử lý trong 7 ngày tới. Cảm ơn bạn!'
-                    : reviewStatus === 'Resolved'
-                      ? 'VD: Vấn đề đã được khắc phục. Cảm ơn bạn đã góp ý!'
-                      : 'VD: Phản ánh không hợp lệ vì...'
-                }
-                rows={5}
-                style={{
-                  width: '100%',
-                  padding: '12px',
+                <div>
+                  <label style={{ fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px' }}>
+                    Mô tả:
+                  </label>
+                  <textarea
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                    rows={4}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px' }}>
+                    Danh mục:
+                  </label>
+                  <select
+                    value={editFormData.category}
+                    onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="Infrastructure">Cơ sở hạ tầng</option>
+                    <option value="Traffic">Giao thông</option>
+                    <option value="Environment">Môi trường</option>
+                    <option value="Security">An ninh</option>
+                    <option value="Other">Khác</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: '600', color: '#374151', display: 'block', marginBottom: '8px' }}>
+                    Phản hồi admin:
+                  </label>
+                  <textarea
+                    value={editFormData.adminResponse}
+                    onChange={(e) => setEditFormData({ ...editFormData, adminResponse: e.target.value })}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical'
+                    }}
+                  />
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                  paddingTop: '16px',
+                  borderTop: '1px solid #e5e7eb'
+                }}>
+                  <button
+                    className="btn"
+                    onClick={() => setIsEditing(false)}
+                    style={{ background: '#6b7280', padding: '10px 20px' }}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={handleSubmitEdit}
+                    style={{ background: '#10b981', padding: '10px 20px' }}
+                  >
+                    💾 Lưu thay đổi
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Thông tin feedback */}
+                <div style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  background: '#f3f4f6',
                   borderRadius: '8px',
-                  border: '1px solid #d1d5db',
-                  fontFamily: 'inherit',
-                  fontSize: '14px',
-                  resize: 'vertical',
-                  lineHeight: '1.5'
-                }}
-                required
-              />
-              <p style={{
-                fontSize: '12px',
-                color: '#6b7280',
-                marginTop: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                💡 {reviewStatus === 'Processing' && 'Thông báo cho người dùng rằng bạn đang xử lý'}
-                {reviewStatus === 'Resolved' && 'Giải thích cách bạn đã giải quyết vấn đề'}
-                {reviewStatus === 'Rejected' && 'Nêu rõ lý do từ chối'}
-              </p>
-            </div>
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{ marginBottom: '12px' }}>
+                    <strong style={{ color: '#374151' }}>ID:</strong>{' '}
+                    <span style={{ color: '#6b7280' }}>{selectedFeedback?.id}</span>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <strong style={{ color: '#374151' }}>Tiêu đề:</strong>{' '}
+                    <span style={{ color: '#111827' }}>{selectedFeedback?.title}</span>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <strong style={{ color: '#374151' }}>Danh mục:</strong>{' '}
+                    <span style={{
+                      padding: '2px 8px',
+                      background: '#dbeafe',
+                      color: '#1e40af',
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      {selectedFeedback?.category}
+                    </span>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <strong style={{ color: '#374151' }}>Nội dung:</strong>
+                    <p style={{
+                      whiteSpace: 'pre-wrap',
+                      marginTop: '8px',
+                      padding: '12px',
+                      background: 'white',
+                      borderRadius: '6px',
+                      color: '#111827',
+                      lineHeight: '1.6'
+                    }}>
+                      {selectedFeedback?.description}
+                    </p>
+                  </div>
 
-            {/* Action buttons */}
-            <div style={{
-              marginTop: '24px',
-              display: 'flex',
-              gap: '12px',
-              justifyContent: 'flex-end',
-              paddingTop: '20px',
-              borderTop: '1px solid #e5e7eb'
-            }}>
-              <button
-                className="btn"
-                onClick={() => setShowModal(false)}
-                style={{
-                  background: '#6b7280',
-                  padding: '10px 20px',
-                  fontWeight: '500'
-                }}
-              >
-                Hủy
-              </button>
-              <button
-                className="btn"
-                onClick={handleSubmitReview}
-                disabled={!adminResponse.trim()}
-                style={{
-                  background: reviewStatus === 'Processing' ? '#3b82f6' :
-                    reviewStatus === 'Resolved' ? '#10b981' : '#ef4444',
-                  padding: '10px 20px',
-                  fontWeight: '500',
-                  opacity: !adminResponse.trim() ? 0.5 : 1,
-                  cursor: !adminResponse.trim() ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {reviewStatus === 'Processing' && '✅ Xác nhận tiếp nhận'}
-                {reviewStatus === 'Resolved' && '✅ Xác nhận giải quyết'}
-                {reviewStatus === 'Rejected' && '❌ Xác nhận từ chối'}
-              </button>
-            </div>
+                  {/* ✅ THÊM: Hiển thị ảnh */}
+                  {selectedFeedback?.imageUrl && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong style={{ color: '#374151' }}>Hình ảnh:</strong>
+                      <div style={{ marginTop: '8px' }}>
+                        <img
+                          src={
+                            selectedFeedback.imageUrl.startsWith('http')
+                              ? selectedFeedback.imageUrl
+                              : `http://localhost:5000${selectedFeedback.imageUrl}`
+                          }
+                          alt="Feedback"
+                          style={{
+                            width: '100%',
+                            maxHeight: '400px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '1px solid #e5e7eb'
+                          }}
+                          onError={(e) => {
+                            console.error('❌ Image load error:', selectedFeedback.imageUrl);
+                            console.error('   Tried URL:', e.target.src);
+
+                            // ✅ THÊM: Show fallback
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = `
+                              <div style="
+                                padding: 40px;
+                                background: #fee2e2;
+                                border: 2px dashed #ef4444;
+                                border-radius: 8px;
+                                text-align: center;
+                                color: #991b1b;
+                              ">
+                                <p style="margin: 0; font-weight: 600;">❌ Không thể tải ảnh</p>
+                                <p style="margin: 8px 0 0; font-size: 12px; color: #dc2626;">
+                                  URL: ${selectedFeedback.imageUrl}
+                                </p>
+                              </div>
+                            `;
+                          }}
+                          onLoad={(e) => {
+                            console.log('✅ Image loaded:', e.target.src);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <strong style={{ color: '#374151' }}>Người gửi:</strong>{' '}
+                    <span style={{ color: '#6b7280' }}>
+                      {selectedFeedback?.user?.fullName || selectedFeedback?.user?.email}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Phản hồi admin */}
+                <div style={{ marginTop: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    <strong style={{ color: '#374151' }}>
+                      Phản hồi của admin: <span style={{ color: '#ef4444' }}>*</span>
+                    </strong>
+                  </label>
+                  <textarea
+                    value={adminResponse}
+                    onChange={(e) => setAdminResponse(e.target.value)}
+                    placeholder={
+                      reviewStatus === 'Processing'
+                        ? 'VD: Chúng tôi đã ghi nhận phản ánh và sẽ xử lý trong 7 ngày tới. Cảm ơn bạn!'
+                        : reviewStatus === 'Resolved'
+                          ? 'VD: Vấn đề đã được khắc phục. Cảm ơn bạn đã góp ý!'
+                          : 'VD: Phản ánh không hợp lệ vì...'
+                    }
+                    rows={5}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      fontFamily: 'inherit',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      lineHeight: '1.5'
+                    }}
+                    required
+                  />
+                  <p style={{
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    marginTop: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    💡 {reviewStatus === 'Processing' && 'Thông báo cho người dùng rằng bạn đang xử lý'}
+                    {reviewStatus === 'Resolved' && 'Giải thích cách bạn đã giải quyết vấn đề'}
+                    {reviewStatus === 'Rejected' && 'Nêu rõ lý do từ chối'}
+                  </p>
+                </div>
+
+                {/* ✅ THÊM: Edit/Delete buttons */}
+                {(selectedFeedback?.status === 'Resolved' || selectedFeedback?.status === 'Rejected') && (
+                  <div style={{
+                    marginTop: '16px',
+                    display: 'flex',
+                    gap: '12px',
+                    paddingTop: '16px',
+                    borderTop: '2px solid #f3f4f6'
+                  }}>
+                    <button
+                      className="btn"
+                      onClick={handleEditFeedback}
+                      style={{
+                        flex: 1,
+                        background: '#3b82f6',
+                        padding: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      ✏️ Chỉnh sửa
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => handleDeleteFeedback(selectedFeedback.id)}
+                      style={{
+                        flex: 1,
+                        background: '#ef4444',
+                        padding: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      🗑️ Xóa
+                    </button>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div style={{
+                  marginTop: '24px',
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                  paddingTop: '20px',
+                  borderTop: '1px solid #e5e7eb'
+                }}>
+                  <button
+                    className="btn"
+                    onClick={() => setShowModal(false)}
+                    style={{
+                      background: '#6b7280',
+                      padding: '10px 20px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={handleSubmitReview}
+                    disabled={!adminResponse.trim()}
+                    style={{
+                      background: reviewStatus === 'Processing' ? '#3b82f6' :
+                        reviewStatus === 'Resolved' ? '#10b981' : '#ef4444',
+                      padding: '10px 20px',
+                      fontWeight: '500',
+                      opacity: !adminResponse.trim() ? 0.5 : 1,
+                      cursor: !adminResponse.trim() ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {reviewStatus === 'Processing' && '✅ Xác nhận tiếp nhận'}
+                    {reviewStatus === 'Resolved' && '✅ Xác nhận giải quyết'}
+                    {reviewStatus === 'Rejected' && '❌ Xác nhận từ chối'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

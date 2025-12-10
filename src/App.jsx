@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-// import Topbar from "./components/Topbar";
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Events from './pages/Events';
@@ -8,87 +8,122 @@ import Feedbacks from './pages/Feedbacks';
 import FloodReports from './pages/FloodReports';
 import TravelTours from './pages/TravelTours';
 import Bookings from './pages/Bookings';
+import Login from './pages/Login';
+import ProtectedRoute from '../utils/ProtectedRoute';
+import './styles/style.css';
+
+// ✅ Layout component
+const MainLayout = ({ children }) => {
+  return (
+    <div className="app">
+      <Sidebar />
+      <main className="main">
+        <div style={{
+          padding: '32px',
+          minHeight: '100vh',
+          maxWidth: '1800px',
+          margin: '0 auto'
+        }}>
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};
 
 export default function App() {
-  const [currentView, setCurrentView] = useState("dashboard");
+  const [, setCurrentView] = useState("dashboard");
 
-  // const handleSearch = (query) => {
-  //   console.log('Search:', query);
-  // };
-
-  // const handleRefresh = () => {
-  //   console.log('Refresh triggered');
-  //   setCurrentView(prev => prev);
-  // };
-
-  // ✅ Navigation handler
   const handleNavigate = (view) => {
     setCurrentView(view);
   };
 
-  const renderMainContent = () => {
-    switch (currentView) {
-      case "dashboard":
-        return <Dashboard onNavigate={handleNavigate} />;
-      case "users":
-        return <Users />;
-      case "events":
-        return <Events />;
-      case "feedbacks":
-        return <Feedbacks />;
-      case "floodreports":
-        return <FloodReports />;
-      case "traveltours":
-        return <TravelTours />;
-      case "bookings":
-        return <Bookings />;
-      default:
-        return (
-          <div style={{
-            padding: '60px 20px',
-            textAlign: 'center',
-            color: '#6b7280'
-          }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🚧</div>
-            <h2>Trang đang phát triển</h2>
-            <p>View "{currentView}" chưa được triển khai</p>
-          </div>
-        );
-    }
-  };
-
-  // const getPageTitle = () => {
-  //   const titles = {
-  //     dashboard: "📊 Tổng quan",
-  //     users: "👥 Quản lý Users",
-  //     events: "📢 Quản lý Sự kiện",
-  //     feedbacks: "💬 Quản lý Feedback",
-  //     floodreports: "🌊 Quản lý Báo cáo Ngập"
-  //   };
-  //   return titles[currentView] || currentView;
-  // };
-
   return (
-    <div className="app">
-      <Sidebar
-        currentView={currentView}
-        onChangeView={setCurrentView}
-      />
+    <BrowserRouter>
+      <Routes>
+        {/* Public route */}
+        <Route path="/login" element={<Login />} />
 
-      <main className="main">
-        {/* <Topbar
-          pageTitle={getPageTitle()}
-          onSearch={handleSearch}
-          onRefresh={handleRefresh}
-        /> */}
+        {/* Protected routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Dashboard onNavigate={handleNavigate} />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
 
-        <div style={{
-          padding: '24px',
-          minHeight: 'calc(100vh - 80px)'
-        }}>
-          {renderMainContent()}
-        </div>
-      </main>
-    </div>
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Users />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Events />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/feedbacks"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Feedbacks />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/floodreports"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <FloodReports />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/traveltours"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <TravelTours />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Bookings />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

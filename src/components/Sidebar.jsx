@@ -1,45 +1,285 @@
-import React from "react";
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import authService from '../services/authService';
 
-export default function Sidebar({ currentView, onChangeView }) {
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const menuItems = [
-    { key: "dashboard", label: "🏠 Tổng quan" },
-    { key: "users", label: "👥 Quản lý Users" },
-    { key: "events", label: "📅 Quản lý Sự kiện" },
-    { key: "feedbacks", label: "💬 Quản lý Feedback" },
-    { key: "floodreports", label: "🌊 Quản lý Flood Report" },
-    { key: "traveltours", label: "🗺️ Quản lý Tour Du Lịch" },
-    { key: "bookings", label: "🎫 Quản lý Đơn đặt Tour" },
-    { key: "settings", label: "⚙️ Cài đặt" }
+    { id: 'dashboard', icon: '📊', label: 'Dashboard', path: '/', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#667eea' },
+    { id: 'users', icon: '👥', label: 'Users', path: '/users', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#667eea' },
+    { id: 'events', icon: '📢', label: 'Events', path: '/events', gradient: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', color: '#2ecc71' },
+    { id: 'feedbacks', icon: '💬', label: 'Feedbacks', path: '/feedbacks', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#f5576c' },
+    { id: 'floodreports', icon: '🌊', label: 'Flood Reports', path: '/floodreports', gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: '#fa709a' },
+    { id: 'traveltours', icon: '🗺️', label: 'Travel Tours', path: '/traveltours', gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', color: '#00b894' },
+    { id: 'bookings', icon: '🎫', label: 'Bookings', path: '/bookings', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: '#0984e3' },
   ];
 
+  const handleLogout = () => {
+    if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
+      authService.logout();
+      navigate('/login', { replace: true });
+    }
+  };
+
+  const currentUser = authService.getCurrentUser();
+
   return (
-    <aside className="sidebar">
-      <div className="brand">SMARTCITY ADMIN</div>
-      <div className="profile">
-        <div className="avatar">AD</div>
-        <div>
-          <div style={{ fontWeight: 700 }}>Quản trị viên</div>
-          <div className="small">khiem@example.com</div>
+    <aside style={{
+      width: '280px',
+      height: '100vh',
+      background: '#aed5e7ff', // ✅ Nền trắng sáng
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.05)', // ✅ Bóng đổ nhẹ hơn
+      borderRight: '1px solid #f1f5f9', // ✅ Viền ngăn cách nhẹ
+      position: 'sticky',
+      top: 0,
+      left: 0,
+      overflowY: 'auto'
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '28px 20px',
+        borderBottom: '1px solid #f1f5f9',
+        background: '#b8dbe9ff'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            boxShadow: '0 8px 16px rgba(102, 126, 234, 0.25)' // ✅ Bóng màu nhẹ
+          }}>
+            🏛️
+          </div>
+          <div>
+            <h1 style={{
+              margin: 0,
+              fontSize: '20px',
+              fontWeight: '800',
+              color: '#1e293b', // ✅ Chữ màu đậm (Slate 800)
+              letterSpacing: '-0.5px'
+            }}>
+              Smart City
+            </h1>
+            <p style={{
+              margin: 0,
+              fontSize: '12px',
+              color: '#64748b', // ✅ Chữ phụ màu xám (Slate 500)
+              fontWeight: '600'
+            }}>
+              Admin Portal
+            </p>
+          </div>
         </div>
+
+        {/* User Info */}
+        {currentUser && (
+          <div style={{
+            padding: '14px',
+            background: '#f8fafc', // ✅ Nền xám rất nhạt
+            border: '1px solid #e2e8f0', // ✅ Viền xám nhạt
+            borderRadius: '16px',
+            marginTop: '10px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                color: 'white',
+                fontWeight: 'bold',
+                flexShrink: 0
+              }}>
+                {currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  color: '#334155', // ✅ Màu chữ đậm hơn
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {currentUser.fullName || currentUser.email}
+                </p>
+                <div style={{
+                  marginTop: '4px',
+                  display: 'inline-block',
+                  padding: '4px 10px',
+                  background: '#dcfce7', // ✅ Xanh lá rất nhạt
+                  borderRadius: '20px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  color: '#15803d', // ✅ Chữ xanh lá đậm
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {currentUser.role}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <ul className="menu">
-        {menuItems.map(item => (
-          <li key={item.key}>
-            <button
-              className={currentView === item.key ? "active" : ""}
-              onClick={() => onChangeView(item.key)}
-            >
-              {item.label}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* Navigation */}
+      <nav style={{
+        flex: 1,
+        padding: '24px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}>
+        <p style={{
+          margin: '0 0 8px 12px',
+          fontSize: '11px',
+          fontWeight: '700',
+          textTransform: 'uppercase',
+          color: '#94a3b8',
+          letterSpacing: '1px'
+        }}>Menu</p>
 
-      <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
-        <div className="small" style={{ marginBottom: 8 }}>Kết nối API</div>
-        <div className="muted">http://10.0.2.2:5000/api/</div>
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.path)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '14px 16px',
+                // ✅ Active: Nền gradient nhạt, Inactive: Trong suốt
+                background: isActive ? 'linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%)' : 'transparent',
+                border: isActive ? '1px solid #e2e8f0' : '1px solid transparent',
+                borderRadius: '16px',
+                // ✅ Active: Màu chữ đen, Inactive: Màu xám
+                color: isActive ? '#1e293b' : '#64748b',
+                fontSize: '14px',
+                fontWeight: isActive ? '700' : '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                position: 'relative',
+                overflow: 'hidden',
+                textAlign: 'left',
+                boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.03)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = '#f8fafc';
+                  e.currentTarget.style.color = '#334155';
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#64748b';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }
+              }}
+            >
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: '15%',
+                  bottom: '15%',
+                  width: '4px',
+                  background: item.gradient,
+                  borderRadius: '0 4px 4px 0'
+                }}></div>
+              )}
+
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '10px',
+                // ✅ Nếu active thì dùng gradient, không thì nền trắng xám
+                background: isActive ? item.gradient : '#f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                flexShrink: 0,
+                // ✅ Nếu inactive thì icon màu xám để dịu mắt
+                filter: isActive ? 'none' : 'grayscale(100%) opacity(0.7)',
+                transition: 'all 0.2s'
+              }}>
+                {item.icon}
+              </div>
+              <span style={{ flex: 1 }}>{item.label}</span>
+
+              {isActive && (
+                <span style={{ fontSize: '10px', color: item.color }}>●</span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Logout Button */}
+      <div style={{ padding: '20px 16px' }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '100%',
+            padding: '16px',
+            background: '#fff1f2', // ✅ Nền đỏ rất nhạt (thay vì đỏ đậm)
+            color: '#e11d48', // ✅ Chữ đỏ đậm
+            border: '1px solid #fecdd3',
+            borderRadius: '16px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#ffe4e6';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 10px 20px rgba(225, 29, 72, 0.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#f7c2c6ff';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>🚪</span>
+          <span>Đăng xuất</span>
+        </button>
       </div>
     </aside>
   );
-}
+};
+
+export default Sidebar;

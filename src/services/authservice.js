@@ -6,18 +6,18 @@ const API_BASE = 'http://localhost:5000/api';
 const MOCK_ADMIN_ACCOUNTS = [
     {
         id: 1,
-        email: 'admin@smartcity.com',
+        email: 'adminsmartcity@gmail.com',
         password: 'admin123',
-        fullName: 'Super Administrator',
+        fullName: 'Administrator',
         phone: '0123456789',
         role: 'Admin',
         address: 'TP.HCM'
     },
     {
         id: 2,
-        email: 'admin@example.com',
+        email: 'adminsmartcity@gmail.com',
         password: 'password123',
-        fullName: 'Admin User',
+        fullName: 'Administrator',
         phone: '0987654321',
         role: 'Admin',
         address: 'Hà Nội'

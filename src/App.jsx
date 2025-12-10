@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Dashboard from './pages/Dashboard';
@@ -12,7 +12,6 @@ import Login from './pages/Login';
 import ProtectedRoute from '../utils/ProtectedRoute';
 import './styles/style.css';
 
-// ✅ Layout component
 const MainLayout = ({ children }) => {
   return (
     <div className="app">
@@ -32,12 +31,6 @@ const MainLayout = ({ children }) => {
 };
 
 export default function App() {
-  const [, setCurrentView] = useState("dashboard");
-
-  const handleNavigate = (view) => {
-    setCurrentView(view);
-  };
-
   return (
     <BrowserRouter>
       <Routes>
@@ -50,7 +43,7 @@ export default function App() {
           element={
             <ProtectedRoute>
               <MainLayout>
-                <Dashboard onNavigate={handleNavigate} />
+                <Dashboard /> {/* ✅ XÓA onNavigate prop */}
               </MainLayout>
             </ProtectedRoute>
           }

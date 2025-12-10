@@ -3,6 +3,23 @@ import Panel from '../components/Panel.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { getBookings, updateBookingStatus } from '../services/api.js';
 
+// ✅ THÊM BASE URL CHO IMAGES
+const API_BASE_URL = 'http://localhost:5000'; // ✅ Đổi thành IP backend của bạn
+
+// ✅ HÀM LẤY URL HÌNH ẢNH ĐẦY ĐỦ
+const getFullImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+
+    // Nếu đã là URL đầy đủ (http/https)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+    }
+
+    // Nếu là relative path, thêm base URL
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${API_BASE_URL}${cleanPath}`;
+};
+
 const ActionButton = ({ title, onClick, color, icon }) => (
     <button
         onClick={onClick}
@@ -41,11 +58,20 @@ const Bookings = () => {
     const fetchBookings = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await getBookings(); // ✅ data đã là array
+            const data = await getBookings();
             console.log('📥 Bookings data:', data);
 
-            // ✅ Kiểm tra data có phải array không
             if (Array.isArray(data)) {
+                // ✅ Log image URLs để debug
+                data.forEach(booking => {
+                    if (booking.tour?.coverImageUrl) {
+                        const fullUrl = getFullImageUrl(booking.tour.coverImageUrl);
+                        console.log('🖼️ Image URL:', {
+                            original: booking.tour.coverImageUrl,
+                            full: fullUrl
+                        });
+                    }
+                });
                 setBookings(data);
             } else {
                 console.warn('⚠️ Data is not an array:', data);
@@ -56,7 +82,7 @@ const Bookings = () => {
         } catch (err) {
             console.error('❌ Fetch bookings error:', err);
             setError(err.message || "Lỗi tải danh sách đơn hàng.");
-            setBookings([]); // ✅ Set empty array on error
+            setBookings([]);
         } finally {
             setLoading(false);
         }
@@ -66,10 +92,9 @@ const Bookings = () => {
         fetchBookings();
     }, [fetchBookings]);
 
-    // ✅ HÀM MỞ MODAL - GIỮ NGUYÊN
     const openModal = (booking, statusType) => {
         setSelectedBooking(booking);
-        setNewStatus(statusType); // "Confirmed" hoặc "Cancelled"
+        setNewStatus(statusType);
         setShowModal(true);
     };
 
@@ -194,132 +219,143 @@ const Bookings = () => {
                     </thead>
 
                     <tbody>
-                        {bookings.map((booking, index) => (
-                            <tr
-                                key={booking.bookingId}
-                                style={{
-                                    background: index % 2 === 0 ? 'white' : '#f9fafb',
-                                    borderBottom: '1px solid #e5e7eb'
-                                }}
-                            >
-                                <td style={cellStyle}>{booking.bookingId}</td>
+                        {bookings.map((booking, index) => {
+                            // ✅ Lấy URL hình ảnh đầy đủ
+                            const imageUrl = getFullImageUrl(booking.tour?.coverImageUrl);
 
-                                {/* ✅ HIỂN THỊ ẢNH TOUR */}
-                                <td style={{ ...cellStyle, textAlign: 'center' }}>
-                                    {booking.tour?.coverImageUrl ? (
-                                        <img
-                                            src={booking.tour.coverImageUrl}
-                                            alt={booking.tour.nameTour}
-                                            style={{
+                            return (
+                                <tr
+                                    key={booking.bookingId}
+                                    style={{
+                                        background: index % 2 === 0 ? 'white' : '#f9fafb',
+                                        borderBottom: '1px solid #e5e7eb'
+                                    }}
+                                >
+                                    <td style={cellStyle}>{booking.bookingId}</td>
+
+                                    {/* ✅ HIỂN THỊ ẢNH TOUR - SỬA */}
+                                    <td style={{ ...cellStyle, textAlign: 'center' }}>
+                                        {imageUrl ? (
+                                            <img
+                                                src={imageUrl}
+                                                alt={booking.tour?.nameTour || 'Tour'}
+                                                style={{
+                                                    width: 80,
+                                                    height: 60,
+                                                    objectFit: 'cover',
+                                                    borderRadius: 6,
+                                                    border: '2px solid #e5e7eb',
+                                                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                                                }}
+                                                onError={(e) => {
+                                                    console.error('❌ Image load error for booking:', booking.bookingId);
+                                                    console.error('❌ Failed URL:', imageUrl);
+                                                    // ✅ Chỉ set placeholder 1 lần
+                                                    if (!e.target.dataset.errorHandled) {
+                                                        e.target.dataset.errorHandled = 'true';
+                                                        e.target.src = 'https://via.placeholder.com/80x60?text=No+Image';
+                                                    }
+                                                }}
+                                            />
+                                        ) : (
+                                            <div style={{
                                                 width: 80,
                                                 height: 60,
-                                                objectFit: 'cover',
+                                                background: '#e5e7eb',
                                                 borderRadius: 6,
-                                                border: '2px solid #e5e7eb',
-                                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                                            }}
-                                            onError={(e) => {
-                                                console.error('❌ Image load error:', booking.tour.coverImageUrl);
-                                                e.target.src = 'https://via.placeholder.com/80x60?text=No+Image';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div style={{
-                                            width: 80,
-                                            height: 60,
-                                            background: '#e5e7eb',
-                                            borderRadius: 6,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '24px'
-                                        }}>
-                                            🖼️
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '24px',
+                                                margin: '0 auto'
+                                            }}>
+                                                🖼️
+                                            </div>
+                                        )}
+                                    </td>
+
+                                    {/* ✅ TÊN TOUR */}
+                                    <td style={cellStyle}>
+                                        <div style={{ fontWeight: '600', color: '#1f2937' }}>
+                                            {booking.tour?.nameTour || 'N/A'}
                                         </div>
-                                    )}
-                                </td>
+                                        <div style={{ fontSize: '12px', color: '#6b7280', marginTop: 2 }}>
+                                            {booking.tour?.tourType} • {booking.tour?.duration}
+                                        </div>
+                                    </td>
 
-                                {/* ✅ TÊN TOUR */}
-                                <td style={cellStyle}>
-                                    <div style={{ fontWeight: '600', color: '#1f2937' }}>
-                                        {booking.tour?.nameTour || 'N/A'}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: 2 }}>
-                                        {booking.tour?.tourType} • {booking.tour?.duration}
-                                    </div>
-                                </td>
+                                    {/* ✅ KHÁCH HÀNG */}
+                                    <td style={cellStyle}>
+                                        <div style={{ fontWeight: '500', color: '#374151' }}>
+                                            {booking.user?.fullName || booking.user?.username || 'N/A'}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#6b7280', marginTop: 2 }}>
+                                            {booking.user?.email}
+                                        </div>
+                                    </td>
 
-                                {/* ✅ KHÁCH HÀNG */}
-                                <td style={cellStyle}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        {booking.user?.fullName || booking.user?.username || 'N/A'}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: 2 }}>
-                                        {booking.user?.email}
-                                    </div>
-                                </td>
+                                    <td style={cellStyle}>
+                                        {new Date(booking.travelDate).toLocaleDateString('vi-VN', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        })}
+                                    </td>
 
-                                <td style={cellStyle}>
-                                    {new Date(booking.travelDate).toLocaleDateString('vi-VN', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric'
-                                    })}
-                                </td>
+                                    <td style={{ ...cellStyle, textAlign: 'center' }}>
+                                        <span style={{
+                                            padding: '4px 10px',
+                                            background: '#dbeafe',
+                                            color: '#1e40af',
+                                            borderRadius: '6px',
+                                            fontWeight: '600',
+                                            fontSize: '13px'
+                                        }}>
+                                            👥 {booking.numberOfPeople}
+                                        </span>
+                                    </td>
 
-                                <td style={{ ...cellStyle, textAlign: 'center' }}>
-                                    <span style={{
-                                        padding: '4px 10px',
-                                        background: '#dbeafe',
-                                        color: '#1e40af',
-                                        borderRadius: '6px',
-                                        fontWeight: '600',
-                                        fontSize: '13px'
-                                    }}>
-                                        👥 {booking.numberOfPeople}
-                                    </span>
-                                </td>
+                                    <td style={{ ...cellStyle, textAlign: 'right', fontWeight: '600', color: '#059669' }}>
+                                        {formatCurrency(booking.totalPrice)}
+                                    </td>
 
-                                <td style={{ ...cellStyle, textAlign: 'right', fontWeight: '600', color: '#059669' }}>
-                                    {formatCurrency(booking.totalPrice)}
-                                </td>
+                                    <td style={cellStyle}>
+                                        <StatusBadge status={booking.status} size="md" />
+                                    </td>
 
-                                <td style={cellStyle}>
-                                    <StatusBadge status={booking.status} size="md" />
-                                </td>
+                                    {/* ✅ CÁC NÚT HÀNH ĐỘNG */}
+                                    <td style={cellStyle}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                            {booking.status === 'Pending' && (
+                                                <>
+                                                    <ActionButton
+                                                        title="Xác nhận"
+                                                        icon="✅"
+                                                        onClick={() => openModal(booking, 'Confirmed')}
+                                                        color="#10b981"
+                                                    />
+                                                    <ActionButton
+                                                        title="Hủy"
+                                                        icon="❌"
+                                                        onClick={() => openModal(booking, 'Cancelled')}
+                                                        color="#ef4444"
+                                                    />
+                                                </>
+                                            )}
 
-                                {/* ✅ CÁC NÚT HÀNH ĐỘNG */}
-                                <td style={cellStyle}>
-                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        {booking.status === 'Pending' && (
-                                            <>
+                                            {(booking.status === 'Confirmed' || booking.status === 'Cancelled') && (
                                                 <ActionButton
-                                                    title="Xác nhận"
-                                                    icon="✅"
-                                                    onClick={() => openModal(booking, 'Confirmed')} // ✅ Gửi "Confirmed"
-                                                    color="#10b981"
+                                                    title="Chi tiết"
+                                                    icon="👁️"
+                                                    onClick={() => openModal(booking, booking.status)}
+                                                    color="#6b7280"
                                                 />
-                                                <ActionButton
-                                                    title="Hủy"
-                                                    icon="❌"
-                                                    onClick={() => openModal(booking, 'Cancelled')} // ✅ Gửi "Cancelled"
-                                                    color="#ef4444"
-                                                />
-                                            </>
-                                        )}
-
-                                        {(booking.status === 'Confirmed' || booking.status === 'Cancelled') && (
-                                            <ActionButton
-                                                title="Chi tiết"
-                                                icon="👁️"
-                                                onClick={() => openModal(booking, booking.status)}
-                                                color="#6b7280"
-                                            />
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -346,6 +382,7 @@ const Bookings = () => {
                     onSave={handleSaveStatus}
                     onClose={() => setShowModal(false)}
                     formatCurrency={formatCurrency}
+                    getFullImageUrl={getFullImageUrl}
                 />
             )}
         </Panel>
@@ -371,10 +408,12 @@ const cellStyle = {
 export default Bookings;
 
 // ========================================
-// MODAL COMPONENT
+// MODAL COMPONENT - SỬA
 // ========================================
 
-function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency }) {
+function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency, getFullImageUrl }) {
+    const imageUrl = getFullImageUrl(booking.tour?.coverImageUrl);
+
     return (
         <div
             style={{
@@ -409,7 +448,7 @@ function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency }) {
                     {newStatus === booking.status && '👁️ Chi tiết đơn hàng'}
                 </h3>
 
-                {/* THÔNG TIN TOUR */}
+                {/* THÔNG TIN TOUR - SỬA */}
                 {booking.tour && (
                     <div style={{
                         marginBottom: '24px',
@@ -419,9 +458,9 @@ function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency }) {
                         color: 'white'
                     }}>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                            {booking.tour.coverImageUrl && (
+                            {imageUrl ? (
                                 <img
-                                    src={booking.tour.coverImageUrl}
+                                    src={imageUrl}
                                     alt={booking.tour.nameTour}
                                     style={{
                                         width: 100,
@@ -430,7 +469,27 @@ function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency }) {
                                         borderRadius: '8px',
                                         border: '2px solid white'
                                     }}
+                                    onError={(e) => {
+                                        if (!e.target.dataset.errorHandled) {
+                                            e.target.dataset.errorHandled = 'true';
+                                            e.target.src = 'https://via.placeholder.com/100x75?text=No+Image';
+                                        }
+                                    }}
                                 />
+                            ) : (
+                                <div style={{
+                                    width: 100,
+                                    height: 75,
+                                    background: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '8px',
+                                    border: '2px solid white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '32px'
+                                }}>
+                                    🖼️
+                                </div>
                             )}
                             <div style={{ flex: 1 }}>
                                 <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
@@ -506,7 +565,7 @@ function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency }) {
                             onClick={onSave}
                             style={{
                                 padding: '10px 20px',
-                                background: newStatus === 'Confirmed' ? '#10b981' : '#ef4444', // ✅ So sánh với "Confirmed"
+                                background: newStatus === 'Confirmed' ? '#10b981' : '#ef4444',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -515,7 +574,7 @@ function BookingModal({ booking, newStatus, onSave, onClose, formatCurrency }) {
                                 fontSize: '14px'
                             }}
                         >
-                            {newStatus === 'Confirmed' ? '✅ Xác nhận' : '❌ Hủy đơn'} {/* ✅ Hiển thị tiếng Việt */}
+                            {newStatus === 'Confirmed' ? '✅ Xác nhận' : '❌ Hủy đơn'}
                         </button>
                     )}
                 </div>

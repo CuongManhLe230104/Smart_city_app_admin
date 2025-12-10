@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getUsers,
   getFeedbacks,
   getFloodReports,
   getEventBanners,
-  getBookings // ✅ Import getBookings
+  getBookings
 } from '../services/api.js';
 import Panel from '../components/Panel.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer
 } from 'recharts';
+import '../styles/style.css';
 
 // Helper functions
 function formatTimeAgo(dateString) {
@@ -36,9 +38,9 @@ function getStatusColor(status) {
     'Rejected': '#ef4444',
     'Processing': '#3b82f6',
     'Resolved': '#10b981',
-    'Confirmed': '#10b981', // ✅ Booking confirmed
-    'Cancelled': '#ef4444', // ✅ Booking cancelled
-    'Completed': '#6366f1'  // ✅ Booking completed
+    'Confirmed': '#10b981',
+    'Cancelled': '#ef4444',
+    'Completed': '#6366f1'
   };
   return colors[status] || '#6b7280';
 }
@@ -58,14 +60,16 @@ function getChartColors(status) {
   return colors[status] || '#6b7280';
 }
 
-export default function Dashboard({ onNavigate }) {
+export default function Dashboard() { // ✅ XÓA prop onNavigate
+  const navigate = useNavigate(); // ✅ THÊM useNavigate hook
+
   const [stats, setStats] = useState({
     users: 0,
     events: 0,
     feedbacks: 0,
     floodReports: 0,
-    bookings: 0, // ✅ Thêm bookings
-    pendingBookings: 0, // ✅ Booking chờ xác nhận
+    bookings: 0,
+    pendingBookings: 0,
     pendingFloodReports: 0,
     pendingFeedbacks: 0
   });
@@ -76,6 +80,12 @@ export default function Dashboard({ onNavigate }) {
   const [feedbackStatus, setFeedbackStatus] = useState({});
   const [bookingStatus, setBookingStatus] = useState({}); // ✅ Thêm booking status
   const [recentEventBanners, setRecentEventBanners] = useState([]);
+
+  // ✅ HÀM NAVIGATE
+  const handleNavigate = (path) => {
+    console.log('🔧 Navigating to:', path);
+    navigate(path);
+  };
 
   const loadStats = useCallback(async () => {
     setLoading(true);
@@ -327,7 +337,7 @@ export default function Dashboard({ onNavigate }) {
         </div>
       ) : (
         <>
-          {/* ✅ ALERT NOTIFICATIONS - THÊM BOOKING */}
+          {/* ✅ ALERT NOTIFICATIONS - SỬA onClick */}
           {(stats.pendingFloodReports > 0 || stats.pendingFeedbacks > 0 || stats.pendingBookings > 0) && (
             <div style={{
               display: 'grid',
@@ -342,7 +352,7 @@ export default function Dashboard({ onNavigate }) {
                   message={`${stats.pendingBookings} đơn đặt tour đang chờ xác nhận`}
                   color="#3b82f6"
                   bgColor="#dbeafe"
-                  onClick={() => onNavigate && onNavigate('bookings')}
+                  onClick={() => handleNavigate('/bookings')} // ✅ SỬA
                 />
               )}
 
@@ -353,7 +363,7 @@ export default function Dashboard({ onNavigate }) {
                   message={`${stats.pendingFloodReports} báo cáo đang chờ duyệt`}
                   color="#ef4444"
                   bgColor="#fee2e2"
-                  onClick={() => onNavigate && onNavigate('floodreports')}
+                  onClick={() => handleNavigate('/floodreports')} // ✅ SỬA
                 />
               )}
 
@@ -364,13 +374,13 @@ export default function Dashboard({ onNavigate }) {
                   message={`${stats.pendingFeedbacks} phản ánh đang chờ xem xét`}
                   color="#f59e0b"
                   bgColor="#fef3c7"
-                  onClick={() => onNavigate && onNavigate('feedbacks')}
+                  onClick={() => handleNavigate('/feedbacks')} // ✅ SỬA
                 />
               )}
             </div>
           )}
 
-          {/* ✅ STATS GRID - THÊM BOOKING CARD */}
+          {/* ✅ STATS GRID - SỬA onClick */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -383,10 +393,9 @@ export default function Dashboard({ onNavigate }) {
               value={stats.users}
               color="#3b82f6"
               gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-              onClick={() => onNavigate && onNavigate('users')}
+              onClick={() => handleNavigate('/users')} // ✅ SỬA
             />
 
-            {/* ✅ BOOKING CARD */}
             <StatCard
               icon="🎫"
               label="Đơn đặt tour"
@@ -394,7 +403,7 @@ export default function Dashboard({ onNavigate }) {
               subValue={stats.pendingBookings > 0 ? `${stats.pendingBookings} chờ xác nhận` : null}
               color="#3b82f6"
               gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-              onClick={() => onNavigate && onNavigate('bookings')}
+              onClick={() => handleNavigate('/bookings')} // ✅ SỬA
             />
 
             <StatCard
@@ -403,7 +412,7 @@ export default function Dashboard({ onNavigate }) {
               value={stats.events}
               color="#10b981"
               gradient="linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)"
-              onClick={() => onNavigate && onNavigate('events')}
+              onClick={() => handleNavigate('/events')} // ✅ SỬA
             />
 
             <StatCard
@@ -413,7 +422,7 @@ export default function Dashboard({ onNavigate }) {
               subValue={stats.pendingFeedbacks > 0 ? `${stats.pendingFeedbacks} chờ xử lý` : null}
               color="#f59e0b"
               gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-              onClick={() => onNavigate && onNavigate('feedbacks')}
+              onClick={() => handleNavigate('/feedbacks')} // ✅ SỬA
             />
 
             <StatCard
@@ -423,7 +432,7 @@ export default function Dashboard({ onNavigate }) {
               subValue={stats.pendingFloodReports > 0 ? `${stats.pendingFloodReports} chờ duyệt` : null}
               color="#ef4444"
               gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-              onClick={() => onNavigate && onNavigate('floodreports')}
+              onClick={() => handleNavigate('/floodreports')} // ✅ SỬA
             />
           </div>
 
@@ -480,7 +489,11 @@ export default function Dashboard({ onNavigate }) {
                   paddingRight: '8px'
                 }}>
                   {recentActivities.map((activity, idx) => (
-                    <ActivityItem key={idx} {...activity} onNavigate={onNavigate} />
+                    <ActivityItem
+                      key={idx}
+                      {...activity}
+                      onNavigate={handleNavigate} // ✅ TRUYỀN handleNavigate
+                    />
                   ))}
                 </div>
               )}
@@ -588,7 +601,7 @@ export default function Dashboard({ onNavigate }) {
                   <RecentEventBannerCard
                     key={banner.id || banner.Id}
                     banner={banner}
-                    onClick={() => onNavigate && onNavigate('events')}
+                    onClick={() => handleNavigate('/events')} // ✅ SỬA
                   />
                 ))
               ) : (
@@ -775,13 +788,17 @@ function StatCard({ icon, label, value, subValue, gradient, onClick }) {
 }
 
 function ActivityItem({ type, icon, text, subtext, time, status, color, onNavigate }) {
+  const handleClick = () => {
+    console.log('🔧 Activity clicked, type:', type);
+    if (type === 'flood') onNavigate('/floodreports');
+    if (type === 'feedback') onNavigate('/feedbacks');
+    if (type === 'booking') onNavigate('/bookings');
+    if (type === 'user') onNavigate('/users');
+  };
+
   return (
     <div
-      onClick={() => {
-        if (type === 'flood') onNavigate && onNavigate('floodreports');
-        if (type === 'feedback') onNavigate && onNavigate('feedbacks');
-        if (type === 'booking') onNavigate && onNavigate('bookings'); // ✅
-      }}
+      onClick={handleClick}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -791,16 +808,14 @@ function ActivityItem({ type, icon, text, subtext, time, status, color, onNaviga
         borderRadius: '12px',
         border: '2px solid #f3f4f6',
         borderLeft: `4px solid ${color}`,
-        cursor: type !== 'user' ? 'pointer' : 'default',
+        cursor: 'pointer', // ✅ Luôn có cursor pointer
         transition: 'all 0.2s',
         boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
       }}
       onMouseEnter={(e) => {
-        if (type !== 'user') {
-          e.currentTarget.style.background = '#f9fafb';
-          e.currentTarget.style.transform = 'translateX(4px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-        }
+        e.currentTarget.style.background = '#f9fafb';
+        e.currentTarget.style.transform = 'translateX(4px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = 'white';

@@ -51,18 +51,7 @@ const Sidebar = () => {
           gap: '12px',
           marginBottom: '20px'
         }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
-            boxShadow: '0 8px 16px rgba(102, 126, 234, 0.25)' // ✅ Bóng màu nhẹ
-          }}>
-            🏛️
+          <div>
           </div>
           <div>
             <h1 style={{
@@ -72,19 +61,10 @@ const Sidebar = () => {
               color: '#1e293b', // ✅ Chữ màu đậm (Slate 800)
               letterSpacing: '-0.5px'
             }}>
-              Smart City
+              Vũng Tàu Smart City
             </h1>
-            <p style={{
-              margin: 0,
-              fontSize: '12px',
-              color: '#64748b', // ✅ Chữ phụ màu xám (Slate 500)
-              fontWeight: '600'
-            }}>
-              Admin Portal
-            </p>
           </div>
         </div>
-
         {/* User Info */}
         {currentUser && (
           <div style={{
@@ -112,7 +92,7 @@ const Sidebar = () => {
                 fontWeight: 'bold',
                 flexShrink: 0
               }}>
-                {currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'A'}
+                {currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : ''}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
@@ -124,7 +104,7 @@ const Sidebar = () => {
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap'
                 }}>
-                  {currentUser.fullName || currentUser.email}
+                  {currentUser.fullName}
                 </p>
                 <div style={{
                   marginTop: '4px',

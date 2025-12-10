@@ -1,46 +1,67 @@
 .login-container {
+    /* ✅ SỬA ĐỔI QUAN TRỌNG: Dùng fixed để đè lên mọi layout khác */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
     height: 100vh;
+
+    /* Căn giữa nội dung */
     display: flex;
     justify-content: center;
     align-items: center;
+
+    /* Màu nền */
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    /* Đảm bảo nó nằm trên cùng */
+    z-index: 9999;
+    overflow: hidden;
+    /* Tránh thanh cuộn thừa */
 }
 
 .login-box {
     background: white;
     padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    width: 100%;
+    /* Hiệu ứng bóng đổ sâu hơn để nổi bật trên nền */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    /* Responsive: chiếm 90% màn hình trên mobile */
     max-width: 400px;
+    /* Nhưng không quá 400px trên desktop */
     text-align: center;
-    animation: slideIn 0.3s ease-out;
+
+    /* Animation hiện ra */
+    animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes slideIn {
+/* Hiệu ứng nảy nhẹ khi hiện ra */
+@keyframes zoomIn {
     from {
         opacity: 0;
-        transform: translateY(-20px);
+        transform: scale(0.8) translateY(-20px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
     }
 }
 
 .login-header h2 {
-    margin-bottom: 10px;
-    color: #333;
-    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: #1e3c72;
+    /* Đổi màu tiêu đề cho tông xuyệt tông */
+    font-weight: 700;
     font-size: 1.8rem;
 }
 
 .login-header p {
-    color: #666;
+    color: #64748b;
     margin-bottom: 30px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 .form-group {
@@ -51,49 +72,53 @@
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #333;
-    font-weight: 500;
+    color: #334155;
+    font-weight: 600;
     font-size: 0.9rem;
 }
 
 .form-group input {
     width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
     font-size: 1rem;
-    transition: all 0.3s;
+    transition: all 0.2s;
     box-sizing: border-box;
+    background-color: #f8fafc;
+
+    /* ✅ QUAN TRỌNG: Thêm màu chữ tối để hiện thị rõ trên nền sáng */
+    color: #1e293b;
 }
 
 .form-group input:focus {
     border-color: #2a5298;
+    background-color: #fff;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
-}
+    box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1);
 
-.form-group input:disabled {
-    background-color: #f3f4f6;
-    cursor: not-allowed;
+    /* Đảm bảo khi focus màu chữ vẫn tối */
+    color: #1e293b;
 }
 
 .login-btn {
     width: 100%;
-    padding: 12px;
-    background-color: #2a5298;
+    padding: 14px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    /* Gradient cho nút */
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    margin-top: 10px;
 }
 
 .login-btn:hover:not(:disabled) {
-    background-color: #1e3c72;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
+    box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
 }
 
 .login-btn:active:not(:disabled) {
@@ -101,18 +126,22 @@
 }
 
 .login-btn:disabled {
-    background-color: #94a3b8;
+    background: #cbd5e1;
     cursor: not-allowed;
+    transform: none;
 }
 
 .error-message {
-    color: #dc2626;
-    background-color: #fee2e2;
+    color: #ef4444;
+    background-color: #fef2f2;
     padding: 12px;
     border-radius: 8px;
     margin-bottom: 20px;
     font-size: 0.9rem;
-    border-left: 4px solid #dc2626;
+    border: 1px solid #fee2e2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     animation: shake 0.3s ease;
 }
 
@@ -124,10 +153,10 @@
     }
 
     25% {
-        transform: translateX(-10px);
+        transform: translateX(-5px);
     }
 
     75% {
-        transform: translateX(10px);
+        transform: translateX(5px);
     }
 }

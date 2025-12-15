@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 import '../styles/Login.css';
+import logo from '../assets/VTSMARTCITY.png'; // 1. Import your logo
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -9,9 +10,6 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-
-    // ✅ Lấy mock accounts
-    // const mockAccounts = authService.getMockAccounts();
 
     // ✅ Kiểm tra đã login chưa
     useEffect(() => {
@@ -27,12 +25,8 @@ const Login = () => {
 
         try {
             console.log('🔧 Attempting login...');
-
             await authService.login(email, password);
-
             console.log('✅ Login successful, redirecting...');
-
-            // ✅ Redirect to dashboard
             navigate('/', { replace: true });
         } catch (err) {
             console.error('❌ Login failed:', err);
@@ -42,10 +36,24 @@ const Login = () => {
         }
     };
 
-
     return (
         <div className="login-container">
             <div className="login-box">
+                {/* 2. Add Logo Image Here */}
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                    <img
+                        src={logo}
+                        alt="App Logo"
+                        style={{
+                            width: '100px', // Adjust size as needed
+                            height: '100px',
+                            objectFit: 'contain',
+                            borderRadius: '16px', // Optional rounded corners
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)' // Optional shadow
+                        }}
+                    />
+                </div>
+
                 <div className="login-header">
                     <h2>Administrator</h2>
                     <p>Đăng nhập để quản lý hệ thống Vũng Tàu Smart City</p>

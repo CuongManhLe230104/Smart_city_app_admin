@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
+import logo from '../assets/VTSMARTCITY.png'; // 1. Import your logo
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -29,11 +30,11 @@ const Sidebar = () => {
     <aside style={{
       width: '280px',
       height: '100vh',
-      background: '#aed5e7ff', // ✅ Nền trắng sáng
+      background: '#aed5e7ff',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.05)', // ✅ Bóng đổ nhẹ hơn
-      borderRight: '1px solid #f1f5f9', // ✅ Viền ngăn cách nhẹ
+      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.05)',
+      borderRight: '1px solid #f1f5f9',
       position: 'sticky',
       top: 0,
       left: 0,
@@ -51,26 +52,40 @@ const Sidebar = () => {
           gap: '12px',
           marginBottom: '20px'
         }}>
+          {/* 2. Add the Logo Image here */}
           <div>
+            <img
+              src={logo}
+              alt="App Logo"
+              style={{
+                height: '40px',        // Adjust size as needed
+                width: '40px',         // Adjust size as needed
+                objectFit: 'contain',
+                borderRadius: '8px',   // Optional: adds rounded corners
+                // boxShadow: '0 2px 4px rgba(0,0,0,0.1)' // Optional: adds a subtle shadow
+              }}
+              onError={(e) => { e.target.style.display = 'none'; }} // Hide if image fails to load
+            />
           </div>
           <div>
             <h1 style={{
               margin: 0,
               fontSize: '20px',
               fontWeight: '800',
-              color: '#1e293b', // ✅ Chữ màu đậm (Slate 800)
-              letterSpacing: '-0.5px'
+              color: '#1e293b',
+              letterSpacing: '0.5px'
             }}>
               Vũng Tàu Smart City
             </h1>
           </div>
         </div>
+
         {/* User Info */}
         {currentUser && (
           <div style={{
             padding: '14px',
-            background: '#f8fafc', // ✅ Nền xám rất nhạt
-            border: '1px solid #e2e8f0', // ✅ Viền xám nhạt
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
             borderRadius: '16px',
             marginTop: '10px'
           }}>
@@ -99,7 +114,7 @@ const Sidebar = () => {
                   margin: 0,
                   fontSize: '14px',
                   fontWeight: '700',
-                  color: '#334155', // ✅ Màu chữ đậm hơn
+                  color: '#334155',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap'
@@ -110,11 +125,11 @@ const Sidebar = () => {
                   marginTop: '4px',
                   display: 'inline-block',
                   padding: '4px 10px',
-                  background: '#dcfce7', // ✅ Xanh lá rất nhạt
+                  background: '#dcfce7',
                   borderRadius: '20px',
                   fontSize: '11px',
                   fontWeight: '700',
-                  color: '#15803d', // ✅ Chữ xanh lá đậm
+                  color: '#15803d',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
                 }}>
@@ -154,11 +169,9 @@ const Sidebar = () => {
                 alignItems: 'center',
                 gap: '14px',
                 padding: '14px 16px',
-                // ✅ Active: Nền gradient nhạt, Inactive: Trong suốt
                 background: isActive ? 'linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%)' : 'transparent',
                 border: isActive ? '1px solid #e2e8f0' : '1px solid transparent',
                 borderRadius: '16px',
-                // ✅ Active: Màu chữ đen, Inactive: Màu xám
                 color: isActive ? '#1e293b' : '#64748b',
                 fontSize: '14px',
                 fontWeight: isActive ? '700' : '600',
@@ -200,14 +213,12 @@ const Sidebar = () => {
                 width: '32px',
                 height: '32px',
                 borderRadius: '10px',
-                // ✅ Nếu active thì dùng gradient, không thì nền trắng xám
                 background: isActive ? item.gradient : '#f1f5f9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '16px',
                 flexShrink: 0,
-                // ✅ Nếu inactive thì icon màu xám để dịu mắt
                 filter: isActive ? 'none' : 'grayscale(100%) opacity(0.7)',
                 transition: 'all 0.2s'
               }}>
@@ -230,8 +241,8 @@ const Sidebar = () => {
           style={{
             width: '100%',
             padding: '16px',
-            background: '#fff1f2', // ✅ Nền đỏ rất nhạt (thay vì đỏ đậm)
-            color: '#e11d48', // ✅ Chữ đỏ đậm
+            background: '#fff1f2',
+            color: '#e11d48',
             border: '1px solid #fecdd3',
             borderRadius: '16px',
             cursor: 'pointer',
